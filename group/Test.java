@@ -12,7 +12,7 @@ public class Test {
 	 *  Analyzes text and groups it into categories.
 	 */
 
-	private static final String PATH_STOP_WORDS =  "/home/felipe/Descargas/sortedWords.txt";
+	private static final String PATH_STOP_WORDS =  "/home/felipe/Codigo/Procrustes/docs/sortedWords.txt";
 	private static final String PATH_TEST = "/home/felipe/Descargas/español.txt";
 	private static final String ENCODING = "UTF-8";
 	private static final int SIZE_OF_BUFFER = 1024;
