@@ -3,13 +3,11 @@ package group;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Scanner;
 
 public class Steam {
-
-	
-	// TODO public removeInvalidCharAndSpaces
 	
 	private File pathToStopWords;
 	private HashSet<String> stopWordsHash;
@@ -18,7 +16,8 @@ public class Steam {
 	private HashSet<Character> specialVowels = new HashSet<Character>(3);
 	private HashSet<Character> accentuatedVowels = new HashSet<Character>(5);
 	private HashSet<Character> consonants = new HashSet<Character>(23);
-	
+	private HashMap<Character, Character> accentuatedToNormal = new HashMap<Character, Character>(5);
+	private HashMap<Character, Character> normalToAccentuated = new HashMap<Character, Character>(5);
 	
 	private static final String[] tempCountryPropperName = {"cort",
 		"ingl", "franc", "irland", "dublin", "portugu",
@@ -58,69 +57,11 @@ public class Steam {
 	Root Modifier Rules
 	putOrRemoveStress: if the root contains an accentuated vowel then remove the
 	                  accent, otherwise place an accent on the rightmost vowel found
-	RemoveStress: removethe accentuated vowel found in the root.
+	RemoveStress: remove the accentuated vowel found in the root.
 */
-	
-	public boolean setStopWords(String pathToFile){
-		/**
-		 * Sets the private path to the stop words
-		 * 
-		 * @param The path to the file with stop words
-		 * @return True if the path was set, false otherwise
-		 */
-		
-		File file = new File(pathToFile);
-		if(!file.canRead())
-			return false;
-		pathToStopWords = file;
-		stopWordsHash = new HashSet<String>();
-		Scanner scanner;
-		
-		try {
-			scanner = new Scanner(pathToStopWords);
-			while(scanner.hasNextLine()){
-				stopWordsHash.add(scanner.nextLine());
-			}
-		} catch (FileNotFoundException e) {
-			
-			System.err.println("The specified path " + pathToStopWords + " doesn't exist");
-			System.err.println("Maybe you can reset it with setStopWords");
-			e.printStackTrace();
-			return false;
-		}
-		
-		scanner.close();
-		return true;
-	}
-	
-	public String removeStopWords(String string){
-		/**
-		 * This method does the following steps:
-		 * 1.- Split the word
-		 * 2.- Iterate each word, and if it has a
-		 * 	   stop word, remove it in-place
-		 * 3.- Return the array.
-		 * 
-		 * @param The pure string
-		 * @return An array with the stop words removed 
-		 */
-		string = string.toLowerCase();
-		
-		// TODO remove invalid characters in UTF-8. Maybe try to fix them.
-		
-		String[] temp = string.split(" ");
-		string = "";
-		for(int i = 0; i < temp.length; i++){
-			if(!stopWordsHash.contains(temp[i]))
-				string += temp[i] + " ";
-		}
-		
-		return string;
-	}
-	
 	public Steam(String pathToStopWords){
 		setStopWords(pathToStopWords);
-		exceptionSuffixRes = new HashSet<Character>();
+		exceptionSuffixRes = new HashSet<Character>(7);
 		exceptionSuffixRes.add('t');	// ends in tres; rupestres
 		exceptionSuffixRes.add('p');	// ends in pres; compres 
 		exceptionSuffixRes.add('c');	// ends in cres; mediocres
@@ -179,6 +120,79 @@ public class Steam {
 		consonants.add('x');
 		consonants.add('y');
 		consonants.add('z');
+		
+		accentuatedToNormal.put('á', 'a');
+		accentuatedToNormal.put('é', 'e');
+		accentuatedToNormal.put('í', 'i');
+		accentuatedToNormal.put('ó', 'o');
+		accentuatedToNormal.put('ú', 'u');
+		
+		normalToAccentuated.put('a', 'á');
+		normalToAccentuated.put('e', 'é');
+		normalToAccentuated.put('i', 'í');
+		normalToAccentuated.put('o', 'ó');
+		normalToAccentuated.put('u', 'ú');
+		
+	}
+	
+	public boolean setStopWords(String pathToFile){
+		/**
+		 * Sets the private path to the stop words
+		 * 
+		 * @param The path to the file with stop words
+		 * @return True if the path was set, false otherwise
+		 */
+		
+		File file = new File(pathToFile);
+		if(!file.canRead())
+			return false;
+		pathToStopWords = file;
+		stopWordsHash = new HashSet<String>();
+		Scanner scanner;
+		
+		try {
+			scanner = new Scanner(pathToStopWords);
+			while(scanner.hasNextLine()){
+				stopWordsHash.add(scanner.nextLine());
+			}
+		} catch (FileNotFoundException e) {
+			
+			System.err.println("The specified path " + pathToStopWords + " doesn't exist");
+			System.err.println("Maybe you can reset it with setStopWords");
+			e.printStackTrace();
+			return false;
+		}
+		
+		scanner.close();
+		
+		System.out.println(stopWordsHash.size());
+		
+		return true;
+	}
+	
+	public String removeStopWords(String string){
+		/**
+		 * This method does the following steps:
+		 * 1.- Split the word
+		 * 2.- Iterate each word, and if it has a
+		 * 	   stop word, remove it in-place
+		 * 3.- Return the array.
+		 * 
+		 * @param The pure string
+		 * @return An array with the stop words removed 
+		 */
+		string = string.toLowerCase();
+		
+		// TODO remove invalid characters in UTF-8. Maybe try to fix them.
+		
+		String[] temp = string.split(" ");
+		string = "";
+		for(int i = 0; i < temp.length; i++){
+			if(!stopWordsHash.contains(temp[i]))
+				string += temp[i] + " ";
+		}
+		
+		return string;
 	}
 	
 	public String removeInvalidCharacters(String string){
@@ -236,8 +250,8 @@ public class Steam {
 				return string.substring(0, string.length()-2);
 			
 			// TODO needs to check the condition "root ends with vowel"
-			// frases --> f
-			if(string.endsWith("ses") || string.endsWith("nes"))
+			// frases --> frase
+			if(string.endsWith("ses") && vowels.contains(string.charAt(string.length()-4)))
 				return string.substring(0, string.length()-1);
 			
 			// TODO match suffix n/s and root has vowels
@@ -250,6 +264,57 @@ public class Steam {
 		// else just return the string without s
 		return string.substring(0,string.length()-1);
 		
+	}
+	
+	private String putOrRemoveStress(String word){
+		/**
+		 * If it contains an accentuated value
+		 * removes the accent. Otherwise place an 
+		 * accent on the rightmost word found
+		 * 
+		 *@param A word to modify the stress. Note that
+		 *		 it doesn't validate if it needs this change.
+		 *
+		 *@return The string modified.
+		 */
+		int accentuatedPosition = -1;
+		int lastVowel = -1;
+		for(int i = 0; i < word.length(); i++){
+			if( accentuatedVowels.contains( word.charAt(i) ) ){
+				// In Spanish there is only one accent in any given word
+				accentuatedPosition = i;
+				break;
+			}
+			else{
+				if (vowels.contains(word.charAt(i)))
+					lastVowel = i;
+			}
+		}
+		
+		if(accentuatedPosition > 0){
+			word = word.replace(word.charAt(accentuatedPosition), 
+								accentuatedToNormal.get(word.charAt(accentuatedPosition)));
+		}
+		else{
+			// TODO Efficientate this
+			char[] temp = word.toCharArray();
+			temp[lastVowel] = normalToAccentuated.get(temp[lastVowel]);
+			word = "";
+			for(int i = 0; i < temp.length; i++){
+				word += temp[i];
+			}
+		}
+		
+		return word;
+	}
+	
+	private String removeStress(String word){
+		
+		for (Character vowel: vowels) {
+			word = word.replace(vowel, normalToAccentuated.get(vowel));
+		}
+
+		return word;
 	}
 
 }
