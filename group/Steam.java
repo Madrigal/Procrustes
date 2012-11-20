@@ -2,6 +2,7 @@ package group;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Scanner;
 
@@ -13,6 +14,52 @@ public class Steam {
 	private File pathToStopWords;
 	private HashSet<String> stopWordsHash;
 	private HashSet<Character> exceptionSuffixRes;
+	private HashSet<Character> vowels = new HashSet<Character>(5);
+	private HashSet<Character> specialVowels = new HashSet<Character>(3);
+	private HashSet<Character> accentuatedVowels = new HashSet<Character>(5);
+	private HashSet<Character> consonants = new HashSet<Character>(23);
+	
+	
+	private static final String[] tempCountryPropperName = {"cort",
+		"ingl", "franc", "irland", "dublin", "portugu",
+		"luxemburgu", "holand", "dan", "finland", "fin", "taiwan",
+		"japon", "sudan", "leon", "vien", "cordob", "malt",
+		"gabon", "ghan", "ugand", "ruand", "ceiland",};
+	private static final HashSet<String> exceptCountryPropperName = new HashSet<String>(Arrays.asList(tempCountryPropperName));
+	private static final String[] tempFrenchWords = {"carn", "ball", "t", "caf", "chal", "beb", "bid", 
+		"macram","carn", "ball" , "t" , "caf",
+				"chal" , "beb", "bid","macram"};
+	private static final HashSet<String> exceptFrenchWords = new HashSet<String>(Arrays.asList(tempFrenchWords));
+	
+	
+	/*
+	Root Conditions
+	Ends_in_Vowel : the root ends in a vowel
+	Ends_in_Consonant: the root ends in a consonant
+	Ends_in_specVowel: he root ends in ‘a’ ‘e’ or ‘i’
+	hasVowel: the root has more than one letter AND contains at least one vowel
+	hasVowel: word has a vowel
+	exceptGen: exceptions for suffices matching “es” that cover proper names of
+	              countries. The root of the word must not match
+	"cort",
+	"ingl", "franc", "irland", "dublin", "portugu",
+	- 21 -"luxemburgu", "holand", "dan", "finland", "fin", "taiwan",
+	"japon", "sudan", "leon", "vien", "cordob", "malt",
+	"gabon", "ghan", "ugand", "ruand", "ceiland",
+	exceptFran:
+	exceptions for certain words whose suffices end in “é” (and which for
+	the most part derive from French words). The root of such words must
+	not match any of the following:
+	"carn", "ball", "t", "caf", "chal", "beb", "bid", "macram",
+	“carn” (for carné from the French carnet), “ball” (for ballé
+	from the French ballet), “t” (for Vermut), “caf” (for café),
+	“chal” (for chalé), “beb” (for bebé), “bid” (for bidé from the
+	French bidet), and “macram” (for “macramé”).
+	Root Modifier Rules
+	putOrRemoveStress: if the root contains an accentuated vowel then remove the
+	                  accent, otherwise place an accent on the rightmost vowel found
+	RemoveStress: removethe accentuated vowel found in the root.
+*/
 	
 	public boolean setStopWords(String pathToFile){
 		/**
@@ -74,14 +121,64 @@ public class Steam {
 	public Steam(String pathToStopWords){
 		setStopWords(pathToStopWords);
 		exceptionSuffixRes = new HashSet<Character>();
-		exceptionSuffixRes.add('t');	// ends in tres
-		exceptionSuffixRes.add('p');	// ends in pres
-		exceptionSuffixRes.add('c');
-		exceptionSuffixRes.add('b');
-		exceptionSuffixRes.add('g');
-		exceptionSuffixRes.add('d');
-		exceptionSuffixRes.add('g');
-		exceptionSuffixRes.add('r');
+		exceptionSuffixRes.add('t');	// ends in tres; rupestres
+		exceptionSuffixRes.add('p');	// ends in pres; compres 
+		exceptionSuffixRes.add('c');	// ends in cres; mediocres
+		exceptionSuffixRes.add('b');	// ends in bres; hombres
+		exceptionSuffixRes.add('g');	// ends in gres; alegres
+		exceptionSuffixRes.add('d');	// ends in dres; padres
+		exceptionSuffixRes.add('r');	// ends in rres; torres
+		
+		// Dont know if I should add accentuated vowels
+		vowels.add('a');
+		vowels.add('e');
+		vowels.add('i');
+		vowels.add('o');
+		vowels.add('u');
+		
+		/*vowels.add('á');
+		vowels.add('é');
+		vowels.add('í');
+		vowels.add('ó');
+		vowels.add('ú');*/
+		
+		specialVowels.add('a');
+		specialVowels.add('e');
+		specialVowels.add('i');
+		
+		/*specialVowels.add('á');
+		specialVowels.add('é');
+		specialVowels.add('í');*/
+		
+		accentuatedVowels.add('á');
+		accentuatedVowels.add('é');
+		accentuatedVowels.add('í');
+		accentuatedVowels.add('ó');
+		accentuatedVowels.add('ú');		
+		
+		consonants.add('b');
+		consonants.add('c');
+		consonants.add('d');
+		consonants.add('f');
+		consonants.add('g');
+		consonants.add('h');
+		consonants.add('j');
+		consonants.add('k');
+		consonants.add('l');
+		consonants.add('m');
+		consonants.add('n');
+		consonants.add('ñ');
+		consonants.add('p');
+		consonants.add('q');
+		consonants.add('r');
+		consonants.add('s');
+		consonants.add('t');
+		consonants.add('u');
+		consonants.add('v');
+		consonants.add('w');
+		consonants.add('x');
+		consonants.add('y');
+		consonants.add('z');
 	}
 	
 	public String removeInvalidCharacters(String string){
@@ -96,7 +193,7 @@ public class Steam {
 		 */
 		
 		String a = "";
-		return a;
+		return string;
 	}
 	
 	public String removePlurals(String string){
@@ -105,7 +202,7 @@ public class Steam {
 		 * 
 		 * This removes plurals based on a set of rules.
 		 * 
-		 * @param A string to remove plurals
+		 * @param A string in lower case
 		 * @return The string in singular
 		 */
 		
@@ -116,11 +213,13 @@ public class Steam {
 			return string;
 		
 		if(string.endsWith("es")){
+			// Only the last two conditions have exceptions
 			
+			// bambúes --> bambú
 			if (string.endsWith("úes"))
 				return string.substring(0, string.length()-2);
 			
-			// Example
+			// autobúses --> autobús
 			if(string.endsWith("uses"))
 				return string.substring(0,string.length()-4) + "ús";
 			
@@ -128,36 +227,29 @@ public class Steam {
 			if(string.endsWith("eses"))
 				return string.substring(0, string.length()-4) + "és";
 			
-			// TODO needs to check the condition "root ends with vowel"
-			// clases --> clase
-			if(string.endsWith("ses"))
-				return string.substring(0, string.length()-1);
-			
 			// actividades --> actividad
 			if(string.endsWith("des"))
 				return string.substring(0, string.length()-2);
 			
+			// señores -- > señor
 			if(string.endsWith("res") && !exceptionSuffixRes.contains(string.charAt(string.length()-4)))
 				return string.substring(0, string.length()-2);
 			
+			// TODO needs to check the condition "root ends with vowel"
+			// frases --> f
+			if(string.endsWith("ses") || string.endsWith("nes"))
+				return string.substring(0, string.length()-1);
+			
+			// TODO match suffix n/s and root has vowels
+			// narices --> nariz, sauces --> sauz
 			if(string.endsWith("ces") && !string.endsWith("auces"))
 				return string.substring(0, string.length()-2);
 			
 		}
 				
+		// else just return the string without s
 		return string.substring(0,string.length()-1);
 		
 	}
-	
-	private boolean endsOnlyWith(String word, String suffix){
-		if(word.length() == 0 || suffix.length() == 0)
-			return false;
-		
-		
-		return false;
-	}
-	
-	
-	
 
 }

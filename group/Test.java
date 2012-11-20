@@ -21,7 +21,6 @@ public class Test {
 		BufferedReader buffReader = null;
 		FileInputStream inputStream = null;
 		Steam steamer = new Steam(PATH_STOP_WORDS);
-		PaperSteamer newSteamer = new PaperSteamer();
 		
 		try {
 			inputStream = new FileInputStream(PATH_TEST);
@@ -33,18 +32,17 @@ public class Test {
 				lines = line.split(" ");
 				for(String word: lines){
 					word.toLowerCase();
-					if(word.endsWith("s")){
-						temp = steamer.removeStopWords(word);
-						System.out.println(temp);
-						System.out.println(steamer.removePlurals(temp));
+					
+					if (word.endsWith("úes")){
+						System.out.println(word);
 					}
+					
 				}
 			}
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
 			return;
 		} catch (IOException e) {
-
 			e.printStackTrace();
 		}
 		
