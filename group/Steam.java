@@ -17,20 +17,11 @@ public class Steam {
 	private HashSet<Character> specialVowels = new HashSet<Character>(3);
 	private HashSet<Character> accentuatedVowels = new HashSet<Character>(5);
 	private HashSet<Character> consonants = new HashSet<Character>(23);
+	private HashSet<Character> punctuation = new HashSet<Character>();
+	private static HashSet<String> exceptCountryPropperName;
+	private static HashSet<String> exceptFrenchWords;
 	private HashMap<Character, Character> accentuatedToNormal = new HashMap<Character, Character>(5);
 	private HashMap<Character, Character> normalToAccentuated = new HashMap<Character, Character>(5);
-	
-	private static final String[] tempCountryPropperName = {"cort",
-		"ingl", "franc", "irland", "dublin", "portugu",
-		"luxemburgu", "holand", "dan", "finland", "fin", "taiwan",
-		"japon", "sudan", "leon", "vien", "cordob", "malt",
-		"gabon", "ghan", "ugand", "ruand", "ceiland",};
-	private static final HashSet<String> exceptCountryPropperName = new HashSet<String>(Arrays.asList(tempCountryPropperName));
-	private static final String[] tempFrenchWords = {"carn", "ball", "t", "caf", "chal", "beb", "bid", 
-		"macram","carn", "ball" , "t" , "caf",
-				"chal" , "beb", "bid","macram"};
-	private static final HashSet<String> exceptFrenchWords = new HashSet<String>(Arrays.asList(tempFrenchWords));
-	
 	
 	/*
 	Root Conditions
@@ -62,6 +53,26 @@ public class Steam {
 */
 	public Steam(String pathToStopWords){
 		setStopWords(pathToStopWords);
+		String[] tempCountryPropperName = {"cort",
+				"ingl", "franc", "irland", "dublin", "portugu",
+				"luxemburgu", "holand", "dan", "finland", "fin", "taiwan",
+				"japon", "sudan", "leon", "vien", "cordob", "malt",
+				"gabon", "ghan", "ugand", "ruand", "ceiland",};
+		String[] tempFrenchWords = {"carn", "ball", "t", "caf", "chal", "beb", "bid", 
+			"macram","carn", "ball" , "t" , "caf",
+					"chal" , "beb", "bid","macram"};
+		Character[] tempVowels = {'a', 'e','i','o','u'};	
+		Character[] tempAccentuated = {'á','é','í','ó','ú'};
+		Character[] tempConsonants = {'b','c','d','f','g','h','j','k','l','m','n','ñ',
+									  'p','q','r','s','t','v','w','x','y','z'};
+		
+		Character[] tempSpecialVowels = {'a','e','i'};		// This are not special per se, 
+															// but common in special cases
+															// for this algorithm
+		
+		exceptCountryPropperName = new HashSet<String>(Arrays.asList(tempCountryPropperName));
+		exceptFrenchWords = new HashSet<String>(Arrays.asList(tempFrenchWords));
+		
 		exceptionSuffixRes = new HashSet<Character>(7);
 		exceptionSuffixRes.add('t');	// ends in tres; rupestres
 		exceptionSuffixRes.add('p');	// ends in pres; compres 
@@ -72,55 +83,21 @@ public class Steam {
 		exceptionSuffixRes.add('r');	// ends in rres; torres
 		
 		// Dont know if I should add accentuated vowels
-		vowels.add('a');
-		vowels.add('e');
-		vowels.add('i');
-		vowels.add('o');
-		vowels.add('u');
+		for(Character vowel: tempVowels){
+			vowels.add(vowel);
+		}
 		
-		/*vowels.add('á');
-		vowels.add('é');
-		vowels.add('í');
-		vowels.add('ó');
-		vowels.add('ú');*/
+		for(Character specialVowel: tempSpecialVowels){
+			specialVowels.add(specialVowel);
+		}
 		
-		specialVowels.add('a');
-		specialVowels.add('e');
-		specialVowels.add('i');
+		for(Character accentuatedVowel: tempAccentuated){
+			accentuatedVowels.add(accentuatedVowel);
+		}
 		
-		/*specialVowels.add('á');
-		specialVowels.add('é');
-		specialVowels.add('í');*/
-		
-		accentuatedVowels.add('á');
-		accentuatedVowels.add('é');
-		accentuatedVowels.add('í');
-		accentuatedVowels.add('ó');
-		accentuatedVowels.add('ú');		
-		
-		consonants.add('b');
-		consonants.add('c');
-		consonants.add('d');
-		consonants.add('f');
-		consonants.add('g');
-		consonants.add('h');
-		consonants.add('j');
-		consonants.add('k');
-		consonants.add('l');
-		consonants.add('m');
-		consonants.add('n');
-		consonants.add('ñ');
-		consonants.add('p');
-		consonants.add('q');
-		consonants.add('r');
-		consonants.add('s');
-		consonants.add('t');
-		consonants.add('u');
-		consonants.add('v');
-		consonants.add('w');
-		consonants.add('x');
-		consonants.add('y');
-		consonants.add('z');
+		for(Character consonant: tempConsonants){
+			consonants.add(consonant);
+		}
 		
 		accentuatedToNormal.put('á', 'a');
 		accentuatedToNormal.put('é', 'e');
@@ -133,6 +110,9 @@ public class Steam {
 		normalToAccentuated.put('i', 'í');
 		normalToAccentuated.put('o', 'ó');
 		normalToAccentuated.put('u', 'ú');
+		
+		punctuation.add('¿');
+		
 		
 	}
 	
@@ -215,7 +195,10 @@ public class Steam {
 		/**
 		 * TODO
 		 * 
-		 * This removes plurals based on a set of rules.
+		 * This removes plurals based on a set of rules. Note that while most of the
+		 * plurals in Spanish end with 's' and are easy to deal with, not all the words
+		 * than end with 's' are plurals, and not all are so easy to reduce to the
+		 * singular form. So, this method is not guaranteed to remove all plurals 
 		 * 
 		 * @param A string in lower case
 		 * @return The string in singular
@@ -259,7 +242,7 @@ public class Steam {
 			// narices --> nariz, sauces --> sauz
 			if(string.endsWith("ces") && !string.endsWith("auces"))
 				return string.substring(0, string.length()-2);
-			
+			// TODO Not all verbs ending with s are dealt this way.
 		}
 				
 		// else just return the string without s
@@ -307,6 +290,12 @@ public class Steam {
 		}
 		
 		return word;
+	}
+	
+	private boolean exceptGen(String word){
+		if(exceptCountryPropperName.contains(word) || exceptionSuffixRes.contains(word))
+			return true;
+		return false;
 	}
 	
 	private String removeStress(String word){
