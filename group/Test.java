@@ -6,6 +6,8 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
+import javax.swing.text.html.HTMLDocument.HTMLReader.IsindexAction;
+
 public class Test {
 
 	/**
@@ -16,41 +18,54 @@ public class Test {
 	private static final String PATH_TEST = "/home/felipe/Descargas/español.txt";
 	private static final String ENCODING = "UTF-8";
 	private static final int SIZE_OF_BUFFER = 1024;
+	
+	private static BufferedReader buffReader;
+	private static FileInputStream inputStream;
+	private static Steam steamer;
+	private static Dictionary dictionary;
+	
+	// For debugging purposes, a Spanish dictionary was added
+	private static final String PATH_DICTIONARY = "/home/felipe/Codigo/Procrustes/docs/newDict.txt";
 
 	public static void main(String[] args) {
-		BufferedReader buffReader = null;
-		FileInputStream inputStream = null;
-		Steam steamer = new Steam(PATH_STOP_WORDS);
+		buffReader = null;
+		inputStream = null;
+		steamer = new Steam(PATH_STOP_WORDS);
+		dictionary = new Dictionary(PATH_DICTIONARY);
 		
-		try {
-			inputStream = new FileInputStream(PATH_TEST);
-			buffReader = new BufferedReader(new InputStreamReader(inputStream,ENCODING), SIZE_OF_BUFFER);
-			String line; 
-			String[] lines;
-			String temp;
-			while((line = buffReader.readLine()) != null){
-				lines = line.split(" ");
-				for(String word: lines){
-					word.toLowerCase();
-					
-					if (word.endsWith("úes")){
-						System.out.println(word);
-					}
-					
-				}
-			}
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-			return;
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+		String test = "programa";
+		System.out.println(dictionary.isInDictionary(test));
 		
-		try {
-			buffReader.close();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+//		try {
+//			inputStream = new FileInputStream(PATH_TEST);
+//			buffReader = new BufferedReader(new InputStreamReader(inputStream,ENCODING), SIZE_OF_BUFFER);
+//			String line; 
+//			String[] lines;
+//			while((line = buffReader.readLine()) != null){
+//				lines = line.split(" ");
+//				String temp;
+//				for(String word: lines){
+//					temp = steamer.removeStopWords(word);
+//					if(!temp.isEmpty()){
+//						if(!dictionary.isInDictionary(word)){
+//							System.out.println(temp);
+//						}
+//					}
+//				}
+//			}
+//		} catch (FileNotFoundException e) {
+//			e.printStackTrace();
+//			return;
+//		} catch (IOException e) {
+//			e.printStackTrace();
+//		}
+//		
+//		try {
+//			buffReader.close();
+//		} catch (IOException e) {
+//			e.printStackTrace();
+//		}
 		
 	}
+	
 }

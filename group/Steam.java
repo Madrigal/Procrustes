@@ -10,6 +10,7 @@ import java.util.Scanner;
 public class Steam {
 	
 	private File pathToStopWords;
+	
 	private HashSet<String> stopWordsHash;
 	private HashSet<Character> exceptionSuffixRes;
 	private HashSet<Character> vowels = new HashSet<Character>(5);
