@@ -6,8 +6,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
-import javax.swing.text.html.HTMLDocument.HTMLReader.IsindexAction;
-
 public class Test {
 
 	/**
@@ -33,39 +31,41 @@ public class Test {
 		steamer = new Steam(PATH_STOP_WORDS);
 		dictionary = new Dictionary(PATH_DICTIONARY);
 		
-		String test = "programa";
-		System.out.println(dictionary.isInDictionary(test));
 		
-//		try {
-//			inputStream = new FileInputStream(PATH_TEST);
-//			buffReader = new BufferedReader(new InputStreamReader(inputStream,ENCODING), SIZE_OF_BUFFER);
-//			String line; 
-//			String[] lines;
-//			while((line = buffReader.readLine()) != null){
-//				lines = line.split(" ");
-//				String temp;
-//				for(String word: lines){
-//					temp = steamer.removeStopWords(word);
-//					if(!temp.isEmpty()){
-//						if(!dictionary.isInDictionary(word)){
-//							System.out.println(temp);
-//						}
-//					}
-//				}
-//			}
-//		} catch (FileNotFoundException e) {
-//			e.printStackTrace();
-//			return;
-//		} catch (IOException e) {
-//			e.printStackTrace();
-//		}
-//		
-//		try {
-//			buffReader.close();
-//		} catch (IOException e) {
-//			e.printStackTrace();
-//		}
+		try {
+			inputStream = new FileInputStream(PATH_TEST);
+			buffReader = new BufferedReader(new InputStreamReader(inputStream,ENCODING), SIZE_OF_BUFFER);
+			String line; 
+			String[] lines;
+			while((line = buffReader.readLine()) != null){
+				lines = line.split(" ");
+				String temp;
+				for(String word: lines){
+					temp = steamer.steamWord(word);
+					if(!temp.isEmpty()){
+						if(!dictionary.isInDictionary(temp)){
+							if(word.endsWith("es"))
+								System.out.println(word + " changed to " + temp);
+						}
+					}
+				}
+			}
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+			return;
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 		
+		try {
+			buffReader.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		
+		String test = "índices";
+		System.out.println(steamer.steamWord(test));
 	}
 	
 }

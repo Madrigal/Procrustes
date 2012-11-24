@@ -1,3 +1,12 @@
+1
+2
+3
+4
+5
+6
+7
+8
+9
 a
 abajo
 al
@@ -7,6 +16,7 @@ alguna
 algunas
 alguno
 algunos
+alrededor
 ambos
 ante
 antes
@@ -16,9 +26,11 @@ aquellos
 aquí
 arriba
 atrás
+b
 bajo
 bastante
 bien
+c
 cabe
 cada
 catorce
@@ -42,10 +54,12 @@ cuando
 cuarta
 cuarto
 cuatro
+d
 de
 debajo
 décimo
 del
+delante
 dentro
 desde
 diecinueve
@@ -65,6 +79,7 @@ ellas
 ellos
 en
 encima
+enfrente
 entonces
 entre
 era
@@ -142,6 +157,7 @@ estuviste
 estuvisteis
 estuvo
 excepto
+f
 fin
 fue
 fue
@@ -161,6 +177,8 @@ fui
 fuimos
 fuiste
 fuisteis
+g
+h
 ha
 ha
 habéis
@@ -216,12 +234,18 @@ hubimos
 hubiste
 hubisteis
 hubo
+i
+j
+k
+l
 la
 las
 le
+lejos
 les
 lo
 los
+m
 más
 me
 mediante
@@ -237,6 +261,7 @@ mis
 mucho
 muchos
 muy
+n
 nada
 ni
 no
@@ -249,6 +274,7 @@ nuestras
 nuestro
 nuestros
 nueve
+ñ
 o
 ocho
 octavo
@@ -258,6 +284,7 @@ otra
 otras
 otro
 otros
+p
 para
 pero
 poco
@@ -278,6 +305,7 @@ pro
 puede
 pueden
 puedo
+q
 que
 qué
 quien
@@ -287,6 +315,8 @@ quiénes
 quince
 quinta
 quinto
+r
+s
 sabe
 sabéis
 sabemos
@@ -340,6 +370,7 @@ suya
 suyas
 suyo
 suyos
+t
 también
 tanto
 te
@@ -409,6 +440,7 @@ tuya
 tuyas
 tuyo
 tuyos
+u
 último
 un
 una
@@ -422,6 +454,7 @@ usan
 usar
 usas
 uso
+v
 va
 vais
 valor
@@ -450,10 +483,10 @@ vuestra
 vuestras
 vuestro
 vuestros
+w
+x
 y
 ya
 yo
-delante
-enfrente
-lejos
-alrededor
+z
+pues
