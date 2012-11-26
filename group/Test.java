@@ -30,9 +30,19 @@ public class Test {
 		inputStream = null;
 		steamer = new Steam(PATH_STOP_WORDS);
 		dictionary = new Dictionary(PATH_DICTIONARY);
+		Document doc = new Document("/home/felipe/Dropbox/Carta Tomás Figueroa.pdf");
+		String text = doc.getText();
+		String[] wordsInText = text.split(" ");
 		
-		
-		try {
+		for (String word: wordsInText){
+			String temp = steamer.steamWord(word);
+			if(!temp.isEmpty()){
+				if(!dictionary.isInDictionary(temp)){
+						System.out.println(word + " changed to " + temp);
+				}
+			}
+		}
+/*		try {
 			inputStream = new FileInputStream(PATH_TEST);
 			buffReader = new BufferedReader(new InputStreamReader(inputStream,ENCODING), SIZE_OF_BUFFER);
 			String line; 
@@ -61,10 +71,13 @@ public class Test {
 			buffReader.close();
 		} catch (IOException e) {
 			e.printStackTrace();
-		}
+		}*/
 
-		
 		String test = "índices";
+		System.out.println(steamer.steamWord(test));
+		test = "fines";
+		System.out.println(steamer.steamWord(test));
+		test = "resúmenes";
 		System.out.println(steamer.steamWord(test));
 	}
 	
