@@ -62,6 +62,7 @@ del
 delante
 dentro
 desde
+detrás
 diecinueve
 dieciocho
 dieciséis
@@ -414,6 +415,7 @@ tienes
 todo
 todos
 tras
+través
 trece
 treinta
 tres
