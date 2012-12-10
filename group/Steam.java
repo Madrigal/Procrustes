@@ -25,12 +25,8 @@ import java.util.Scanner;
  *
  */
 public class Steam {
-
 	
-	// For debugging purposes, a Spanish dictionary was added
-	private static final String PATH_DICTIONARY = "/home/felipe/Codigo/Procrustes/docs/newDict.txt";
 
-	private HashSet<String> stopWordsHash;
 	private HashSet<Character> vowels = new HashSet<Character>(5);
 	private HashSet<Character> specialVowels = new HashSet<Character>(3);
 	private HashSet<Character> accentuatedVowels = new HashSet<Character>(5);
@@ -41,7 +37,17 @@ public class Steam {
 	private static HashSet<String> exceptFrenchWords;
 	private HashMap<Character, Character> accentuatedToNormal = new HashMap<Character, Character>(5);
 	private HashMap<Character, Character> normalToAccentuated = new HashMap<Character, Character>(5);
-	Dictionary dictionary = null;
+	
+	/*
+	 * This are all the dictionary that can be used. However, maybe you
+	 * are not going to use them all.
+	 */
+	
+	private StopWords stopWords = null;
+	private RiV_Dictionary rivDictionary = null;
+	private I_Dictionary iDict = null;
+	private SpanishDictionary spanishDictionary = null;
+	private PropperNamesDictionary propperNames = null;
 
 	/**
 	 * The consrtuctor takes as argument the path to stop words, and initializes
@@ -51,7 +57,7 @@ public class Steam {
 	 */
 	
 	public Steam(){
-		setStopWordsList();
+		
 		String[] tempCountryPropperName = {"cort",
 				"ingl", "franc", "irland", "dublin", "portugu",
 				"luxemburgu", "holand", "dan", "finland", "fin", "taiwan",
@@ -119,35 +125,7 @@ public class Steam {
 		normalToAccentuated.put('u', 'ú');
 		
 		// Spanish dictinary for debugging purposes
-		dictionary = new Dictionary();
-	}
-
-	/*
-	 * At first this method was going to have as a parameter the 
-	 * path to the stop words, but later I decided that if you are going
-	 * to change the stop words, you should modify the txt file. 
-	 */
-	/**
-	 * Sets the private path to the stop words.
-	 * 
-	 * @param The path to the file with stop words
-	 * @return True if the path was set, false otherwise
-	 */
-	private boolean setStopWordsList(){
-
-		String separator = System.getProperty("file.separator");
-		String path = separator + "docs" + separator + "sortedWords.txt" ;
-		System.out.println(path);
-		InputStream in = this.getClass().getResourceAsStream(path);
-		stopWordsHash = new HashSet<String>();
-		Scanner scanner;
-		scanner = new Scanner(in);
-		while(scanner.hasNextLine()){
-			stopWordsHash.add(scanner.nextLine());
-		}
-
-		scanner.close();
-		return true;
+		//dictionary = new Dictionary();
 	}
 
 	/** 
@@ -183,7 +161,7 @@ public class Steam {
 			System.out.println("The guilty one is " + word);
 			e.printStackTrace();
 		}
-		if(!dictionary.isInDictionary(word))
+		if(!stopWords.isInDictionary(word))
 			System.out.println(word);
 		return word;
 
@@ -198,7 +176,9 @@ public class Steam {
 	 * @return true if the word is in the dictionary, false otherwise
 	 */
 	private boolean isinIDict(String word) {
-		return false;
+		if(iDict == null)
+			iDict = new I_Dictionary();
+		return iDict.isInDictionary(word);
 	}
 
 	/**
@@ -214,12 +194,15 @@ public class Steam {
 	 */
 	public String removeStopWords(String string){
 
+		if (stopWords == null)
+			stopWords = new StopWords();
+		
 		string = string.toLowerCase();
 		String[] temp = string.split(" ");
 		
 		string = "";
 		for(int i = 0; i < temp.length; i++){
-			if(!stopWordsHash.contains(temp[i]))
+			if(!stopWords.isInDictionary(temp[i]))
 				string += temp[i] + " ";
 		}
 
@@ -245,7 +228,9 @@ public class Steam {
 	 * 
 	 */
 	public boolean checkIfPropperName(String word){
-		return false;
+		if (propperNames == null)
+			propperNames = new PropperNamesDictionary();
+		return propperNames.isInDictionary(word);
 	}
 
 	/**
@@ -824,6 +809,34 @@ public class Steam {
 		
 		return word;
 	}
+	
+	/**
+	 * TODO This method needs to call UnStem in case it isn't found.
+	 * Until now, there is no way to do it.
+	 * @param word
+	 * @return
+	 */
+	private boolean isInRivDictionary(String word){
+		if (rivDictionary == null)
+			rivDictionary = new RiV_Dictionary();
+		return rivDictionary.isInDictionary(word);
+	}
+	
+	/**
+	 * 
+	 * @param failRule
+	 * @param word
+	 * @return
+	 */
+	private String unStem(int failRule, String word){
+		switch(failRule){
+		case 2:
+			// do stuff
+		}
+		return word;
+	}
+	
+	
 	
 	/**
 	 * If it contains an accentuated value
