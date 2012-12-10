@@ -37,6 +37,7 @@ public class Steam {
 	private static HashSet<String> exceptFrenchWords;
 	private HashMap<Character, Character> accentuatedToNormal = new HashMap<Character, Character>(5);
 	private HashMap<Character, Character> normalToAccentuated = new HashMap<Character, Character>(5);
+	int caseToUnstem = 0;
 	
 	/*
 	 * This are all the dictionary that can be used. However, maybe you
@@ -138,7 +139,7 @@ public class Steam {
 	 * is a stop word, like prepositions.
 	 */
 	public String steamWord(String word){
-
+		caseToUnstem = 0;
 		word = word.trim();
 		word = word.replaceAll("[^\\p{L}^\\p{M}]", "");
 		if(word.isEmpty())
@@ -489,9 +490,10 @@ public class Steam {
 			if (word.endsWith("atorio"))
 				return word.replace("atorio", "ar");
 
-			if (word.endsWith("itorio"))
+			if (word.endsWith("itorio")){
+				caseToUnstem = 1;
 				return word.replace("itorio", "") + 'V';
-
+			}
 			// TODO centavo --> cent
 			if (word.endsWith("avo"))
 				return word.replace("avo", "v");
@@ -566,8 +568,8 @@ public class Steam {
 		
 		String[] irrSuffixes = {"ado",
 								"ada",
-								"íera",
-								"íeramo",
+								"iera",
+								"iéramo",
 								"ierais",
 								"ieran",
 								"iese",
@@ -583,6 +585,7 @@ public class Steam {
 								"isteis",
 								"ieron",
 								"ido",
+								"ida",
 								"amo",
 								"emo",
 								"imo",
@@ -594,8 +597,38 @@ public class Steam {
 		};
 		
 		for(String suffix:irrSuffixes){
-			if (word.endsWith(suffix))
+			if (word.endsWith(suffix)){
+				
+				//This are all cases to make the unstem
+				
+				String[] specialCases = {"ado",
+										 "ada",
+										 "iera",
+										 "ía",
+										 "ían",
+										 "ido",
+										 "ida",
+										 "amo",
+										 "emo",
+										 "imo",
+										 "an",
+										 "en"
+				};
+				caseToUnstem = 1;
+
+				// This loop updates the case to unstem, and if it finds
+				// a match, returns.
+				for (String sCase: specialCases){
+					caseToUnstem++;
+					if (word.endsWith(sCase)){
+						return word.replace(sCase, "V");
+					}
+				}
+				
+				// Else, we report that we found none
+				caseToUnstem = 0;
 				return word.replace(suffix, "V");
+			}
 		}
 		
 		return word;
@@ -613,11 +646,15 @@ public class Steam {
 		if (word.endsWith("sible"))
 			return word;
 		
-		if (word.endsWith("able"))
+		if (word.endsWith("able")){
+			caseToUnstem = 14;
 			return word.substring(0, word.length() - 4) + 'V';
+		}
 		
-		if (word.endsWith("ible"))
+		if (word.endsWith("ible")){
+			caseToUnstem = 15;
 			return word.substring(0, word.length() - 4) + 'V';
+		}
 		
 		if (word.endsWith("cecito") || word.endsWith("cecita"))
 			return word.replaceAll("cecit*", "z");
@@ -796,8 +833,31 @@ public class Steam {
 		
 		
 		for (String[] suffix: suffixAndReplace){
-			if (word.endsWith(suffix[0]))
+			if (word.endsWith(suffix[0])){
+				
+				String[] specialCases = {"que",
+										 "gue",
+										 "nzo",
+										 "rzo",
+										 "ingo",
+										 "ío",
+										 "íe",
+										 "duzco"
+						
+				};
+				
+				caseToUnstem = 15;
+				for (String sCase: specialCases){
+					caseToUnstem++;
+					if (word.endsWith(sCase)){
+						return word.substring(0, suffix[0].length()) + suffix[1];
+					}
+				}
+				
+				// If we didn't get any special cases, reset the variable
+				caseToUnstem = 0;
 				return word.substring(0, suffix[0].length()) + suffix[1];
+			}
 		}
 		
 		if (word.endsWith("é") && !exceptFrenchWords.contains(word))
@@ -823,17 +883,93 @@ public class Steam {
 	}
 	
 	/**
+	 * Checks if the word is not in the Ri-V Dictionary, it 
+	 * unstems it, based on a set of rules. The rule number is set
+	 * through the stemming process
 	 * 
-	 * @param failRule
 	 * @param word
 	 * @return
 	 */
-	private String unStem(int failRule, String word){
-		switch(failRule){
+	private String unStem(String word){
+		switch(caseToUnstem){
+		case 0:
+			// It is not in the unstemming rules
+			return word;
+			
+		case 1:
+			return word.replace("V", "itorio");
+		
 		case 2:
-			// do stuff
+			return word.replace("V", "ado");
+			
+		case 3:
+			return word.replace("V", "ada");
+
+		case 4:
+			return word.replace("V", "iera");
+
+		case 5:
+			return word.replace("V", "ía");
+
+		case 6:
+			return word.replace("V", "ían");
+
+		case 7:
+			return word.replace("V", "ido");
+
+		case 8:
+			return word.replace("V", "ida");
+
+		case 9:
+			return word.replace("V", "amo");
+
+		case 10:
+			return word.replace("V", "emo");
+
+		case 11:
+			return word.replace("V", "imo");
+
+		case 12:
+			return word.replace("V", "an");
+
+		case 13:
+			return word.replace("V", "en");
+
+		case 14:
+			return word.replace("V", "able");
+
+		case 15:
+			return word.replace("V", "ible");
+
+		case 16:
+			return word.replace("cV", "que");
+
+		case 17:
+			return word.replace("gV", "gue");
+
+		case 18:
+			return word.replace("nzV", "nzo");
+
+		case 19:
+			return word.replace("rcV", "rzo");
+
+		case 20:
+			return word.replace("inguV", "ingo");
+
+		case 21:
+			return word.replace("iV", "ío");
+
+		case 22:
+			return word.replace("iV", "íe");
+
+		case 23:
+			return word.replace("ducV", "duzco");
+			
+		default:
+			return word;
+
 		}
-		return word;
+		
 	}
 	
 	
