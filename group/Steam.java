@@ -149,8 +149,10 @@ public class Steam {
 			return word;
 		if (checkIfPropperName(word))		// right now it just return false always.
 			return word;
-		if (isinIDict(word))
-			return word;
+		
+		word = lookupIDict(word);
+		
+		
 		try {
 			word = changeToSingular(word);
 			word = removeAdverbsAndReflectives(word);
@@ -159,11 +161,10 @@ public class Steam {
 			word = removeRegularVerbs(word);
 			
 		} catch (Exception e) {
-			System.out.println("The guilty one is " + word);
+			System.out.println("Stemming failed. The guilty one is " + word);
 			e.printStackTrace();
 		}
-		if(!stopWords.isInDictionary(word))
-			System.out.println(word);
+		
 		return word;
 
 	}
@@ -176,10 +177,10 @@ public class Steam {
 	 * @param word The word to check
 	 * @return true if the word is in the dictionary, false otherwise
 	 */
-	private boolean isinIDict(String word) {
+	private String lookupIDict(String word) {
 		if(iDict == null)
 			iDict = new I_Dictionary();
-		return iDict.isInDictionary(word);
+		return iDict.lookup(word);
 	}
 
 	/**
@@ -876,10 +877,10 @@ public class Steam {
 	 * @param word
 	 * @return
 	 */
-	private boolean isInRivDictionary(String word){
+	private String lookupRivDictionary(String word){
 		if (rivDictionary == null)
 			rivDictionary = new RiV_Dictionary();
-		return rivDictionary.isInDictionary(word);
+		return rivDictionary.lookup(word);
 	}
 	
 	/**
