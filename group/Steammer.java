@@ -1,10 +1,8 @@
 package group;
 
-import java.io.InputStream;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Scanner;
 
 /**
  * A spanish stemming class for the spanish language.
@@ -24,8 +22,8 @@ import java.util.Scanner;
  * @author felipe
  *
  */
-public class Steam {
-	
+public class Steammer {
+
 
 	private HashSet<Character> vowels = new HashSet<Character>(5);
 	private HashSet<Character> specialVowels = new HashSet<Character>(3);
@@ -38,16 +36,15 @@ public class Steam {
 	private HashMap<Character, Character> accentuatedToNormal = new HashMap<Character, Character>(5);
 	private HashMap<Character, Character> normalToAccentuated = new HashMap<Character, Character>(5);
 	int caseToUnstem = 0;
-	
+
 	/*
 	 * This are all the dictionary that can be used. However, maybe you
 	 * are not going to use them all.
 	 */
-	
+
 	private StopWords stopWords = null;
 	private RiV_Dictionary rivDictionary = null;
 	private I_Dictionary iDict = null;
-	private SpanishDictionary spanishDictionary = null;
 	private PropperNamesDictionary propperNames = null;
 
 	/**
@@ -56,9 +53,9 @@ public class Steam {
 	 * 
 	 * @param pathToStopWords The path to an UTF-8 txt file with stop words
 	 */
-	
-	public Steam(){
-		
+
+	public Steammer(){
+
 		String[] tempCountryPropperName = {"cort",
 				"ingl", "franc", "irland", "dublin", "portugu",
 				"luxemburgu", "holand", "dan", "finland", "fin", "taiwan",
@@ -124,7 +121,7 @@ public class Steam {
 		normalToAccentuated.put('i', 'í');
 		normalToAccentuated.put('o', 'ó');
 		normalToAccentuated.put('u', 'ú');
-		
+
 		// Spanish dictinary for debugging purposes
 		//dictionary = new Dictionary();
 	}
@@ -149,22 +146,25 @@ public class Steam {
 			return word;
 		if (checkIfPropperName(word))		// right now it just return false always.
 			return word;
-		
+
 		word = lookupIDict(word);
-		
-		
+
+
 		try {
 			word = changeToSingular(word);
 			word = removeAdverbsAndReflectives(word);
 			word = removeRegularVerbs(word);
 			word = step5(word);
 			word = removeRegularVerbs(word);
-			
+			word = iregularSpelling(word);
+			word = lookupRivDictionary(word);
+			word = unStem(word);
+
 		} catch (Exception e) {
 			System.out.println("Stemming failed. The guilty one is " + word);
 			e.printStackTrace();
 		}
-		
+
 		return word;
 
 	}
@@ -198,10 +198,10 @@ public class Steam {
 
 		if (stopWords == null)
 			stopWords = new StopWords();
-		
+
 		string = string.toLowerCase();
 		String[] temp = string.split(" ");
-		
+
 		string = "";
 		for(int i = 0; i < temp.length; i++){
 			if(!stopWords.isInDictionary(temp[i]))
@@ -210,7 +210,7 @@ public class Steam {
 
 		return string;
 	}
-	
+
 	/**
 	 * TODO This method should check in a dictionary of propper names if it is contained.
 	 * There are doubts about the efficiency of this, most notable in Zazo, Figuerola and
@@ -220,7 +220,7 @@ public class Steam {
 	 * @param word The word to check if propper name
 	 * @return boolean True if the word is a propper name, false otherwise
 	 */
-	
+
 	/* Zazo, Figuerola and Berrocal (2007) in their paper "La detección de nombres propios
 	 * en español y su aplicación en recuperación de información" developed an algorithm for 
 	 * automatic detection of propper names in Spanish. However, they stated that while the 
@@ -256,70 +256,69 @@ public class Steam {
 			return word;
 
 
-			if(word.endsWith("es")){
-				// Only the last two conditions have exceptions
+		if(word.endsWith("es")){
+			// Only the last two conditions have exceptions
 
-				// bambúes --> bambú
-				if (word.endsWith("úes"))
+			// bambúes --> bambú
+			if (word.endsWith("úes"))
+				return word.substring(0, word.length()-2);
+
+			// actividades --> actividad
+			if(word.endsWith("des"))
+				return word.substring(0, word.length()-2);
+
+			// autobúses --> autobús
+			if(word.endsWith("uses"))
+				return word.substring(0,word.length()-4) + "ús";
+
+			// intereses --> interés
+			if(word.endsWith("eses"))
+				return word.substring(0, word.length()-4) + "és";
+
+			// digitales --> digital
+			if(word.endsWith("les")){
+				if (!exceptionSuffixLes.contains(word.charAt(word.length()-4)))
 					return word.substring(0, word.length()-2);
-
-				// actividades --> actividad
-				if(word.endsWith("des"))
+			}
+			// señores -- > señor
+			if(word.endsWith("res")){ 
+				if (!exceptionSuffixRes.contains(word.charAt(word.length()-4)))
 					return word.substring(0, word.length()-2);
-
-				// autobúses --> autobús
-				if(word.endsWith("uses"))
-					return word.substring(0,word.length()-4) + "ús";
-
-				// intereses --> interés
-				if(word.endsWith("eses"))
-					return word.substring(0, word.length()-4) + "és";
-
-				// digitales --> digital
-				if(word.endsWith("les")){
-						if (!exceptionSuffixLes.contains(word.charAt(word.length()-4)))
-					return word.substring(0, word.length()-2);
-				}
-				// señores -- > señor
-				if(word.endsWith("res")){ 
-					if (!exceptionSuffixRes.contains(word.charAt(word.length()-4)))
-					return word.substring(0, word.length()-2);
-				}
-				
-				/*
-				 * If the word ends with "nes" or "ces", it maybe needs to be accentuated.
-				 * So, that's what we do here.
-				 * TODO
-				 */
-				if(word.endsWith("nes")){
-					word = word.substring(0, word.length()-2);
-					word = putOrRemoveStress(word);
-					return word;
-				}
-
-				// frases --> frase
-
-				if(word.endsWith("ses")) {
-					if (vowels.contains(word.charAt(word.length()-4)))
-					return word.substring(0, word.length()-1);
-				}
-				
-				// narices --> nariz, sauces --> sauz
-				if(word.endsWith("ces") && !word.endsWith("auces")){
-
-					//like "narices"
-					if(vowels.contains(word.charAt(word.length()-3))){
-						word = word.substring(0, -3) + 'z';
-						return word;
-					}
-				}
 			}
 
-
-
-			if(exceptionPlurals(word))
+			/*
+			 * If the word ends with "nes" or "ces", it maybe needs to be accentuated.
+			 * So, that's what we do here.
+			 * TODO
+			 */
+			if(word.endsWith("nes")){
+				word = word.substring(0, word.length()-2);
+				word = putOrRemoveStress(word);
 				return word;
-		
+			}
+
+			// frases --> frase
+			if(word.endsWith("ses")) {
+				if (vowels.contains(word.charAt(word.length()-4)))
+					return word.substring(0, word.length()-1);
+			}
+
+			// narices --> nariz, sauces --> sauz
+			if(word.endsWith("ces") && !word.endsWith("auces")){
+
+				//like "narices"
+				if(vowels.contains(word.charAt(word.length()-3))){
+					word = word.substring(0, -3) + 'z';
+					return word;
+				}
+			}
+		}
+
+
+
+		if(exceptionPlurals(word))
+			return word;
+
 
 		// else just return the string without s
 		return word.substring(0,word.length()-1);
@@ -338,8 +337,8 @@ public class Steam {
 	 */
 	private String removeAdverbsAndReflectives(String word){
 
-		
-			if((word.endsWith("melo") 	||
+
+		if((word.endsWith("melo") 	||
 				word.endsWith("mela") 	||
 				word.endsWith("selo") 	||
 				word.endsWith("telo") 	||
@@ -354,10 +353,10 @@ public class Steam {
 				)
 			return removeStress(word);
 
-			if(word.endsWith("erno"))
-				return word;  
+		if(word.endsWith("erno"))
+			return word;  
 
-			if((word.endsWith("rlo") ||
+		if((word.endsWith("rlo") ||
 				word.endsWith("rla") ||
 				word.endsWith("rme") ||
 				word.endsWith("rle") ||
@@ -370,140 +369,140 @@ public class Steam {
 				)
 			return word.substring(0, word.length()-2);
 
-			if (word.endsWith("rl"))
-				return word.substring(0, word.length()-1);
+		if (word.endsWith("rl"))
+			return word.substring(0, word.length()-1);
 
-			if ((word.endsWith("ndolo") ||
-				 word.endsWith("ndola") ||
-				 word.endsWith("ndole") ||
-				 word.endsWith("ndome") ||
-				 word.endsWith("ndote") ||
-				 word.endsWith("ndono") ||
-				 word.endsWith("ndose") 
-				 )
-				 &&
-				 hasVowel(word)
-				 ){
+		if ((word.endsWith("ndolo") ||
+				word.endsWith("ndola") ||
+				word.endsWith("ndole") ||
+				word.endsWith("ndome") ||
+				word.endsWith("ndote") ||
+				word.endsWith("ndono") ||
+				word.endsWith("ndose") 
+				)
+				&&
+				hasVowel(word)
+				){
 			String temp = word.substring(0, word.length()-5);
 			return temp + "ndo";
-			}
+		}
 
-			// TODO find and example of word that ends like this
-			if (word.endsWith("ndoo"))
-				return word.substring(0, word.length()-1);
+		// TODO find and example of word that ends like this
+		if (word.endsWith("ndoo"))
+			return word.substring(0, word.length()-1);
 
-			/* TODO Rule 170 and 171. It seems that
-			 * here is a typo, because the rules are
-			 * 	170 "anza" Ends_in_Vowel NULL "ar"
-			 *  171 "anza" NULL NULL "ar"
-			 */
-			
-			// varianza --> variar
-			if (word.endsWith("anza"))
-				return word.replace("anza", "ar");
+		/* TODO Rule 170 and 171. It seems that
+		 * here is a typo, because the rules are
+		 * 	170 "anza" Ends_in_Vowel NULL "ar"
+		 *  171 "anza" NULL NULL "ar"
+		 */
 
-			// durante --> durar
-			if (word.endsWith("ante"))
-				return word.replace("ante", "ar");
+		// varianza --> variar
+		if (word.endsWith("anza"))
+			return word.replace("anza", "ar");
 
-			// TODO superlativo --> superlar
-			// paliativo -- > paliar
-			if (word.endsWith("ativo") || word.endsWith("ativa"))
-				return word.replaceAll("ativ*", "ar");
+		// durante --> durar
+		if (word.endsWith("ante"))
+			return word.replace("ante", "ar");
 
-			// mezcladora -- > mezclar
-			if (word.endsWith("dora") && endsInVowel(word.substring(0,word.length()-4)))
-				return word.replace("dora", "r");
+		// TODO superlativo --> superlar
+		// paliativo -- > paliar
+		if (word.endsWith("ativo") || word.endsWith("ativa"))
+			return word.replaceAll("ativ*", "ar");
 
-			// bailador --> bailar
-			if (word.endsWith("dor"))
-				return word.replace("dor", "r");
+		// mezcladora -- > mezclar
+		if (word.endsWith("dora") && endsInVowel(word.substring(0,word.length()-4)))
+			return word.replace("dora", "r");
 
-			// TODO madura --> mar
-			if (word.endsWith("dura"))
-				return word.replace("dura", "r");
+		// bailador --> bailar
+		if (word.endsWith("dor"))
+			return word.replace("dor", "r");
 
-			// maduración --> madurar
-			if (word.endsWith("ación"))
-				return word.replace("ación","ar");
+		// TODO madura --> mar
+		if (word.endsWith("dura"))
+			return word.replace("dura", "r");
 
-			// evolución --> evolucionar, but I can't think of many more examples
-			if (word.endsWith("lución"))
-				return word.replace("lución", "lucionar");
+		// maduración --> madurar
+		if (word.endsWith("ación"))
+			return word.replace("ación","ar");
 
-			// deducción --> deducir,
-			if (word.endsWith("ducción"))
-				return word.replace("ducción", "ducir");
+		// evolución --> evolucionar, but I can't think of many more examples
+		if (word.endsWith("lución"))
+			return word.replace("lución", "lucionar");
 
-			if (word.endsWith("ucción"))
-				return word.replace("ucción", "uir");
+		// deducción --> deducir,
+		if (word.endsWith("ducción"))
+			return word.replace("ducción", "ducir");
 
-			if (word.endsWith("ución"))
-				return word.replace("ución", "uir");
+		if (word.endsWith("ucción"))
+			return word.replace("ucción", "uir");
 
-			if (word.endsWith("abilidad"))
-				return word.replace("abilidad", "able");
+		if (word.endsWith("ución"))
+			return word.replace("ución", "uir");
 
-			// visibilidad --> visible
-			if (word.endsWith("libilidad"))
-				return word.replace("libilidad", "ible");
+		if (word.endsWith("abilidad"))
+			return word.replace("abilidad", "able");
 
-			// temeroso --> temor
-			if ((word.endsWith("rosa") || word.endsWith("roso"))
-					&& endsInVowel(word.substring(0, word.length()-4)))
-				return word.replaceAll("ros*", "r");
+		// visibilidad --> visible
+		if (word.endsWith("libilidad"))
+			return word.replace("libilidad", "ible");
 
-			// entrenamiento --> entrenar
-			if (word.endsWith("amiento"))
-				return word.replace("amiento", "ar");
+		// temeroso --> temor
+		if ((word.endsWith("rosa") || word.endsWith("roso"))
+				&& endsInVowel(word.substring(0, word.length()-4)))
+			return word.replaceAll("ros*", "r");
 
-			// This is the first introduction of the special character 
-			// "V". This will be used latter in the algorithm
-			if (word.endsWith("imiento"))
-				return word.replace("imiento", "V");
+		// entrenamiento --> entrenar
+		if (word.endsWith("amiento"))
+			return word.replace("amiento", "ar");
 
-			//  tolerancia --> tolerar
-			if (word.endsWith("ancia"))
-				return word.replace("ancia", "ar");
+		// This is the first introduction of the special character 
+		// "V". This will be used latter in the algorithm
+		if (word.endsWith("imiento"))
+			return word.replace("imiento", "V");
 
-			// superlative
-			if (word.endsWith("ncísimo") || word.endsWith("ncísima"))
-				return word.substring(0, word.length()-7) + 'n';
+		//  tolerancia --> tolerar
+		if (word.endsWith("ancia"))
+			return word.replace("ancia", "ar");
 
-			if (word.endsWith("rcísimo") || word.endsWith("rcísima"))
-				return word.substring(0, word.length()-7) + 'r';
+		// superlative
+		if (word.endsWith("ncísimo") || word.endsWith("ncísima"))
+			return word.substring(0, word.length()-7) + 'n';
 
-			// grandísimo --> grande
-			if (word.endsWith("ndísimo") || word.endsWith("ndísima"))
-				return word.substring(0, word.length()-7) + "nde";
+		if (word.endsWith("rcísimo") || word.endsWith("rcísima"))
+			return word.substring(0, word.length()-7) + 'r';
 
-			// TODO violentísimo -- violente
-			if (word.endsWith("ntísimo") || word.endsWith("ntísima"))
-				return word.substring(0, word.length()-7) + "nte";
+		// grandísimo --> grande
+		if (word.endsWith("ndísimo") || word.endsWith("ndísima"))
+			return word.substring(0, word.length()-7) + "nde";
 
-			if (word.endsWith("ísimo"))
-				return word.replace("ísimo", "o");
+		// TODO violentísimo -- violente
+		if (word.endsWith("ntísimo") || word.endsWith("ntísima"))
+			return word.substring(0, word.length()-7) + "nte";
 
-			if (word.endsWith("ísima"))
-				return word.replace("ísima", "a");
+		if (word.endsWith("ísimo"))
+			return word.replace("ísimo", "o");
 
-			// TODO aleatorio --> aleatar
-			if (word.endsWith("atorio"))
-				return word.replace("atorio", "ar");
+		if (word.endsWith("ísima"))
+			return word.replace("ísima", "a");
 
-			if (word.endsWith("itorio")){
-				caseToUnstem = 1;
-				return word.replace("itorio", "") + 'V';
-			}
-			// TODO centavo --> cent
-			if (word.endsWith("avo"))
-				return word.replace("avo", "v");
-		
+		// TODO aleatorio --> aleatar
+		if (word.endsWith("atorio"))
+			return word.replace("atorio", "ar");
+
+		if (word.endsWith("itorio")){
+			caseToUnstem = 1;
+			return word.replace("itorio", "") + 'V';
+		}
+		// TODO centavo --> cent
+		if (word.endsWith("avo"))
+			return word.replace("avo", "v");
+
 
 		// If we got here we skipped all the above rules
 		return word;
 	}
-	
+
 	/**
 	 * This method deals with regular verbs and irregular conjugation
 	 * 
@@ -512,126 +511,99 @@ public class Steam {
 	 * the word gets a -V termination for the next stage
 	 */
 	private String removeRegularVerbs(String word) {
-		
+
 		// Sequía pass untouched
 		if (word.endsWith("quía"))
 			return word; 
-		
+
 		// R suffixes covers common forms in verbs.
 		// remember that all infinitives end in "ar","er" or "ir"
 		String[] rSuffixes = { "ría",
-							   "ríamo",
-							   "ríais",
-							   "rían",
-							   "ré",
-							   "rá",
-							   "remo",
-							   "réis",
-							   "rán"				
+				"ríamo",
+				"ríais",
+				"rían",
+				"ré",
+				"rá",
+				"remo",
+				"réis",
+				"rán"				
 		};
-		
+
 		for (String suffix: rSuffixes){
 			if (word.endsWith(suffix))
 				return word.substring(0, word.length() - suffix.length()) + 'r';
 		}
-		
+
 		// This deals with the exclusive suffixes of "ar" termination
 		String[] arSuffixes = { "aba",
-								"ábamos",
-								"abais",
-								"aban",
-								"ara",
-								"áramo",
-								"arais",
-								"aran",
-								"ase",
-								"ásemo",
-								"aseis",
-								"asen",
-								"aste",
-								"asteis",
-								"aron"					
+				"ábamos",
+				"abais",
+				"aban",
+				"ara",
+				"áramo",
+				"arais",
+				"aran",
+				"ase",
+				"ásemo",
+				"aseis",
+				"asen",
+				"aste",
+				"asteis",
+				"aron"					
 		};
-		
+
 		for(String suffix: arSuffixes){
 			if (word.endsWith(suffix))
 				return word.substring(0, word.length() - suffix.length()) + "ar";
 		}
-		
+
 		// Funny how both "er" and "ir" have so few 
 		if (word.endsWith("ed"))
 			return word.substring(0, word.length() - 2) + "er";
-		
+
 		if (word.endsWith("­ís"))
 			return word.substring(0, word.length() -2) + "ir";
-		
+
 		// Here the regular verbs end and the irregular begin
-		
+
 		String[] irrSuffixes = {"ado",
-								"ada",
-								"iera",
-								"iéramo",
-								"ierais",
-								"ieran",
-								"iese",
-								"iésemo",
-								"ieseis",
-								"iesen",
-								"ía",
-								"íamo",
-								"iais",
-								"ían",
-								"iste",
-								"ió",
-								"isteis",
-								"ieron",
-								"ido",
-								"ida",
-								"amo",
-								"emo",
-								"imo",
-								"áis",
-								"éis",
-								"an",
-								"en",
-								"í"				 
+				"ada",
+				"iera",
+				"iéramo",
+				"ierais",
+				"ieran",
+				"iese",
+				"iésemo",
+				"ieseis",
+				"iesen",
+				"ía",
+				"íamo",
+				"iais",
+				"ían",
+				"iste",
+				"ió",
+				"isteis",
+				"ieron",
+				"ido",
+				"ida",
+				"amo",
+				"emo",
+				"imo",
+				"áis",
+				"éis",
+				"an",
+				"en",
+				"í"				 
 		};
-		
+
 		for(String suffix:irrSuffixes){
 			if (word.endsWith(suffix)){
-				
-				//This are all cases to make the unstem
-				
-				String[] specialCases = {"ado",
-										 "ada",
-										 "iera",
-										 "ía",
-										 "ían",
-										 "ido",
-										 "ida",
-										 "amo",
-										 "emo",
-										 "imo",
-										 "an",
-										 "en"
-				};
-				caseToUnstem = 1;
 
-				// This loop updates the case to unstem, and if it finds
-				// a match, returns.
-				for (String sCase: specialCases){
-					caseToUnstem++;
-					if (word.endsWith(sCase)){
-						return word.replace(sCase, "V");
-					}
-				}
-				
-				// Else, we report that we found none
-				caseToUnstem = 0;
+				checkIfSpecialCase(suffix, 1);
 				return word.replace(suffix, "V");
 			}
 		}
-		
+
 		return word;
 	}
 
@@ -642,60 +614,60 @@ public class Steam {
 	 * @return The word with the rules applied, never null
 	 */
 	private String step5(String word){
-		
+
 		// risible gets unmodiffied
 		if (word.endsWith("sible"))
 			return word;
-		
+
 		if (word.endsWith("able")){
 			caseToUnstem = 14;
 			return word.substring(0, word.length() - 4) + 'V';
 		}
-		
+
 		if (word.endsWith("ible")){
 			caseToUnstem = 15;
 			return word.substring(0, word.length() - 4) + 'V';
 		}
-		
+
 		if (word.endsWith("cecito") || word.endsWith("cecita"))
 			return word.replaceAll("cecit*", "z");
-		
+
 		if (word.endsWith("cecillo") || word.endsWith("cecilla"))
 			return word.replaceAll("cecill*", "z");
-		
+
 		if (word.endsWith("recito"))
 			return word.replace("recito", "re");
-		
+
 		if (word.endsWith("lecito") || word.endsWith("lecita"))
 			return word.replaceAll("lecit*", "le");
-		
+
 		if (word.endsWith("ecito") || word.endsWith("ecita"))
 			return word.replaceAll("ecit*", "");
-		
+
 		if (word.endsWith("recillo") || word.endsWith("recilla"))
 			return word.replaceAll("recill*", "re");
-		
+
 		if (word.contains("ecillo") || word.endsWith("ecilla"))
 			return word.replaceAll("ecill*", "");
-		
+
 		if (word.endsWith("cillo") || word.endsWith("cilla"))
 			return word.replaceAll("cill*", "");
-		
+
 		if (word.endsWith("ando"))
 			return word.replace("ando", "ar");
-		
+
 		if (word.endsWith("iendo"))
 			return word.replace("iendo", "V");
-		
+
 		if (word.endsWith("yendo"))
 			return word.replace("yendo", "er");
-		
+
 		if (word.endsWith("ilidad"))
 			return word.replace("ilidad", "ilo");
-		
+
 		if (word.endsWith("lidad"))
 			return word.replace("lidad", "l");
-		
+
 		if (word.endsWith("íes"))
 			return word.replace("íes", "í");
 
@@ -711,7 +683,7 @@ public class Steam {
 	 * rule matched.
 	 */
 	private String iregularSpelling (String word){
-		
+
 		String [][] suffixAndReplace = {
 				{"respuesta", "responder"},
 				{"puesto", "poner"},
@@ -736,26 +708,26 @@ public class Steam {
 				{"frita", "freír"},
 				{"dicho", "decir"},
 				{"dicha", "decir"},
-				
+
 				{"que", "cV"},
 				{"qué", "cV"},
 				{"quV", "cV"},
 				{"gué", "gV"},
 				{"guV", "gV"},
 				{"gue", "gV"},
-				
+
 				{"güe", "guV"},
 				{"güV", "guV"},
 				{"güé", "guV"},
-				
+
 				{"nzo", "nzV"},
-				
+
 				{"rzo", "rcV"},
 				{"rzV", "rcV"},
-				
+
 				{"ingo", "inguV"},
 				{"ingV", "inguV"},
-				
+
 				{"yó", "V"},
 				{"yeron","V"},
 				{"yera","V"},
@@ -764,7 +736,7 @@ public class Steam {
 				{"yerV","V"},
 				{"yese","V"},
 				{"yesV","V"},
-				
+
 				{"lló","llV"},
 				{"lleron","llV"},
 				{"llera","llV"},
@@ -772,7 +744,7 @@ public class Steam {
 				{"llése","llV"},
 				{"llésV","llV"},
 				{"llesV","llV"},
-				
+
 				{"ñó","ñV"},
 				{"ñeron","ñV"},
 				{"ñera","ñV"},
@@ -780,23 +752,23 @@ public class Steam {
 				{"ñese","ñV"},
 				{"ñésV","ñV"},
 				{"ñesV","ñV"},
-				
+
 				{"güence","gonzV"},
 				{"güencV","gonzV"},
 				{"güenzo","gonzV"},
-				
+
 				{"ío","iV"},
 				{"íe","iV"},
 				{"íV","iV"},
-				
+
 				{"úo","uV"},
 				{"úa","uV"},
 				{"úV","uV"},
 				{"úe","uV"},
-				
+
 				{"ienzV","enzV"},
 				{"encé","enzV"},
-				
+
 				{"duzco","ducV"},
 				{"duzcV","ducV"},
 				{"duje","ducV"},
@@ -807,70 +779,49 @@ public class Steam {
 				{"dujese","ducV"},
 				{"dujésV","ducV"},
 				{"dujesV","ducV"},
-				
+
 				{"ó","V"},
 				{"duzca","V"},
-				
+
 				{"ós","ó"},
-				
+
 				{"yo","V"},
 				{"ye","V"},
 				{"ya","V"},
 				{"yV","V"},
-				
+
 				{"rza","rcV"},
-				
+
 				{"nga","ngV"},
-				
+
 				{"íste","V"},
 				{"ímo","V"},
 				{"ístei","V"},
-				
+
 				{"zco","cV"},
 				{"zca","cV"},
 				{"zcV","cV"},
-				
+
 		};
-		
-		
+
+
 		for (String[] suffix: suffixAndReplace){
 			if (word.endsWith(suffix[0])){
-				
-				String[] specialCases = {"que",
-										 "gue",
-										 "nzo",
-										 "rzo",
-										 "ingo",
-										 "ío",
-										 "íe",
-										 "duzco"
-						
-				};
-				
-				caseToUnstem = 15;
-				for (String sCase: specialCases){
-					caseToUnstem++;
-					if (word.endsWith(sCase)){
-						return word.substring(0, suffix[0].length()) + suffix[1];
-					}
-				}
-				
-				// If we didn't get any special cases, reset the variable
-				caseToUnstem = 0;
+				checkIfSpecialCase(word, 2);
 				return word.substring(0, suffix[0].length()) + suffix[1];
 			}
 		}
-		
+
 		if (word.endsWith("é") && !exceptFrenchWords.contains(word))
 			return word.substring(0, word.length() - 1) + 'V';
-		
+
 		if (word.endsWith("és") && !exceptCountryPropperName.contains(word))
 			return word.substring(0, word.length() - 1);
-		
-		
+
+
 		return word;
 	}
-	
+
 	/**
 	 * TODO This method needs to call UnStem in case it isn't found.
 	 * Until now, there is no way to do it.
@@ -882,7 +833,81 @@ public class Steam {
 			rivDictionary = new RiV_Dictionary();
 		return rivDictionary.lookup(word);
 	}
-	
+
+	/**
+	 * The stemming algorithm handles special cases, where it may need to 
+	 * un-stem the word if it isn't found in the dictionary. This method updates
+	 * a flag if it is needed, and does nothing if not.
+	 * 
+	 * @param word The word to check if it is in the set of special cases
+	 * @param step The part of the algorithm to check, whether is in Remove adverbs (1)
+	 * or irregular spelling (2) 
+	 * 
+	 */
+	private void checkIfSpecialCase(String word, int step){
+
+		boolean foundSpecialCase = false;
+
+		switch(step){
+		// From method removeAdverbsAndReflectives
+		case 1:
+
+			String[] specialCases = {"ado",
+					"ada",
+					"iera",
+					"ía",
+					"ían",
+					"ido",
+					"ida",
+					"amo",
+					"emo",
+					"imo",
+					"an",
+					"en"
+			};
+			caseToUnstem = 1;
+
+			for (String sCase: specialCases){
+				caseToUnstem++;
+				if (word.endsWith(sCase)){
+					foundSpecialCase = true;
+					break;
+				}
+			}
+
+			if (!foundSpecialCase)
+				caseToUnstem = 0;
+			break;
+
+		case 2:
+			String[] specialCases2 = {"que",
+					"gue",
+					"nzo",
+					"rzo",
+					"ingo",
+					"ío",
+					"íe",
+					"duzco"
+
+			};
+
+			caseToUnstem = 15;
+			for (String sCase: specialCases2){
+				caseToUnstem++;
+				if (word.endsWith(sCase)){
+					foundSpecialCase = true;
+					break;
+				}
+			}
+
+			if (!foundSpecialCase)
+				caseToUnstem = 0;
+			break;
+		default:
+			caseToUnstem = 0;
+		}
+	}
+
 	/**
 	 * Checks if the word is not in the Ri-V Dictionary, it 
 	 * unstems it, based on a set of rules. The rule number is set
@@ -896,13 +921,13 @@ public class Steam {
 		case 0:
 			// It is not in the unstemming rules
 			return word;
-			
+
 		case 1:
 			return word.replace("V", "itorio");
-		
+
 		case 2:
 			return word.replace("V", "ado");
-			
+
 		case 3:
 			return word.replace("V", "ada");
 
@@ -965,16 +990,16 @@ public class Steam {
 
 		case 23:
 			return word.replace("ducV", "duzco");
-			
+
 		default:
 			return word;
 
 		}
-		
+
 	}
-	
-	
-	
+
+
+
 	/**
 	 * If it contains an accentuated value
 	 * removes the accent. Otherwise place an 
@@ -1036,13 +1061,13 @@ public class Steam {
 	private boolean exceptionPlurals(String word){
 
 		String [] exceptions = {"ríais", "ríeis", "arais","aseis","asteis","ireais",
-								"ieseis","isteis","yerais","ís", "íes"};
-		
+				"ieseis","isteis","yerais","ís", "íes"};
+
 		for (String exception: exceptions){
 			if (word.contains(exception))
 				return true;
 		}
-		
+
 		return false;
 	}
 

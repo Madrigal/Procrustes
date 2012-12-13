@@ -1,5 +1,6 @@
 package group;
 
+
 import java.io.InputStream;
 import java.util.HashSet;
 import java.util.Scanner;
@@ -28,12 +29,16 @@ public abstract class TemplateDictionary {
 		String separator = System.getProperty("file.separator");
 		String path = separator + "docs" + separator + dictionaryName + ".txt" ;
 		System.out.println(path);
-		InputStream in = this.getClass().getResourceAsStream(path);
-
+		InputStream in = null;
 		dictionaryHash = new HashSet<String>();
-		Scanner scanner;
-
+		Scanner scanner = null;
+		
+		
+		// TODO fix, because it doesn't work in a JAR
+		in = this.getClass().getResourceAsStream(path);
+		System.out.println(in);
 		scanner = new Scanner(in);
+		
 		while(scanner.hasNextLine()){
 			dictionaryHash.add(scanner.nextLine());
 		}
